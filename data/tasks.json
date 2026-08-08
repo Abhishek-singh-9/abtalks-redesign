@@ -1,0 +1,37 @@
+{
+    "today": {
+        "day": 23,
+        "title": "Build a REST API with Express",
+        "description": "Create a fully functional REST API with CRUD operations using Express.js and connect it to a MongoDB database.",
+        "difficulty": "Medium",
+        "estimatedTime": "2-3 hours",
+        "tags": [
+            "Node.js",
+            "Express",
+            "MongoDB"
+        ]
+    },
+    "day12": {
+        "day": 12,
+        "title": "React State Management with Redux",
+        "description": "Implement global state management in your React app using Redux Toolkit. Build a shopping cart with add, remove, and quantity controls.",
+        "difficulty": "Hard",
+        "estimatedTime": "3-4 hours",
+        "tags": [
+            "React",
+            "Redux",
+            "State Management"
+        ],
+        "whatToBuild": [
+            "Set up Redux Toolkit store",
+            "Create cart slice with reducers",
+            "Connect components using useSelector and useDispatch",
+            "Add persist cart to localStorage"
+        ],
+        "submission": {
+            "githubUrl": "",
+            "linkedinUrl": "",
+            "submitted": false
+        }
+    }
+}

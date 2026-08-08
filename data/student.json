@@ -1,0 +1,35 @@
+{
+    "name": "Arjun Sharma",
+    "username": "arjun_builds",
+    "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=arjun",
+    "currentStreak": 23,
+    "longestStreak": 23,
+    "totalDays": 60,
+    "completedDays": 23,
+    "missedDays": 1,
+    "track": "Full Stack Development",
+    "joinedDate": "2026-07-16",
+    "achievements": [
+        {
+            "id": 1,
+            "title": "First Commit",
+            "earned": true
+        },
+        {
+            "id": 2,
+            "title": "7-Day Streak",
+            "earned": true
+        },
+        {
+            "id": 3,
+            "title": "21-Day Streak",
+            "earned": true
+        },
+        {
+            "id": 4,
+            "title": "Halfway There",
+            "earned": false
+        }
+    ],
+    "standing": "Top 12%"
+}
