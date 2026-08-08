@@ -1,551 +1,434 @@
 "use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 
-// CountUp Component
-const CountUp = ({ end, duration }: { end: number, duration: number }) => {
+function CountUpStat({ end, prefix = "", suffix = "", duration = 2000, label }: { end: number, prefix?: string, suffix?: string, duration?: number, label: string }) {
   const [count, setCount] = useState(0);
-  
-  useEffect(() => {
-    let startTimestamp: number | null = null;
-    let animationFrameId: number;
-
-    const step = (timestamp: number) => {
-      if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      // easeOutExpo
-      const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      setCount(Math.floor(easeProgress * end));
-      
-      if (progress < 1) {
-        animationFrameId = window.requestAnimationFrame(step);
-      }
-    };
-    
-    animationFrameId = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(animationFrameId);
-  }, [end, duration]);
-  
-  return <>{count}</>;
-};
-
-// TypedText Component
-const TypedText = () => {
-  const words = ["Web Developer", "App Developer", "AI Engineer"];
-  const [wordIndex, setWordIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [blink, setBlink] = useState(true);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const blinkTimer = setInterval(() => setBlink((b) => !b), 500);
-    return () => clearInterval(blinkTimer);
-  }, []);
-
-  useEffect(() => {
-    const currentWord = words[wordIndex];
-    if (subIndex === currentWord.length && !isDeleting) {
-      const timeout = setTimeout(() => setIsDeleting(true), 1500);
-      return () => clearTimeout(timeout);
-    }
-    
-    if (subIndex === 0 && isDeleting) {
-      setIsDeleting(false);
-      setWordIndex((prev) => (prev + 1) % words.length);
-      return;
-    }
-    
-    const timeout = setTimeout(() => {
-      setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
-    }, isDeleting ? 50 : 100);
-    
-    return () => clearTimeout(timeout);
-  }, [subIndex, isDeleting, wordIndex, words]);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          let startTime: number | null = null;
+          const animate = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+            setCount(Math.floor(easeProgress * end));
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              setCount(end);
+            }
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [end, duration, hasAnimated]);
 
   return (
-    <div className="h-6 mt-4 text-orange-400 font-bold text-lg tracking-wider">
-      <span>{words[wordIndex].substring(0, subIndex)}</span>
-      <span className={blink ? "opacity-100" : "opacity-0"}>|</span>
+    <div ref={ref} className="flex-1">
+      <div className="text-2xl font-bold text-[#f97316]">
+        {prefix}{count}{suffix}
+      </div>
+      <div className="text-[9px] text-gray-500 font-bold mt-1 tracking-wider uppercase">{label}</div>
     </div>
   );
-};
+}
 
-// Particles Component
-const Particles = () => {
-  const [particles, setParticles] = useState<{ id: number; left: number; top: number; size: number; duration: number; delay: number }[]>([]);
-
-  useEffect(() => {
-    const newParticles = Array.from({ length: 40 }).map((_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      size: Math.random() * 4 + 2,
-      duration: Math.random() * 15 + 10,
-      delay: Math.random() * -15, // Negative delay so they start already on screen
-    }));
-    setParticles(newParticles);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="absolute bg-orange-500/50 rounded-full animate-float shadow-[0_0_10px_rgba(249,115,22,0.8)]"
-          style={{
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            left: `${p.left}%`,
-            top: `${p.top}%`,
-            animationDuration: `${p.duration}s`,
-            animationDelay: `${p.delay}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Animated Headline Component
-const AnimatedHeadline = () => {
-  const text1 = "Build your";
-  const text2 = "coding habit.";
-  const text3 = "Get discovered.";
-
-  const renderText = (text: string, delayOffset: number) => (
-    <span className="whitespace-nowrap">
-      {text.split('').map((char, i) => (
-        <span
-          key={i}
-          className={`inline-block animate-letter-reveal opacity-0 text-transparent bg-clip-text bg-gradient-to-b from-white via-orange-100 to-orange-400 ${char === ' ' ? 'w-3' : ''}`}
-          style={{ animationDelay: `${delayOffset + i * 0.04}s` }}
-        >
-          {char}
-        </span>
-      ))}
-    </span>
-  );
-
-  return (
-    <h2 className="relative text-5xl sm:text-5xl font-black tracking-tighter leading-[1.05]">
-      {renderText(text1, 0)}<br />
-      {renderText(text2, text1.length * 0.04)}<br />
-      {renderText(text3, (text1.length + text2.length) * 0.04)}
-    </h2>
-  );
-};
-
-export default function LandingPage() {
+export default function ABTalksLanding() {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
   const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const roles = ["Web Developer", "App Developer", "AI Engineer", "Data Scientist", "Backend Dev", "CP Champion"];
+  const [roleIndex, setRoleIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRoleIndex((prev) => (prev + 1) % roles.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    
-    const targetDate = new Date('2026-08-15T00:00:00Z');
+    const targetDate = new Date("2026-09-01T00:00:00").getTime();
 
-    const timer = setInterval(() => {
-      const now = new Date();
-      const difference = targetDate.getTime() - now.getTime();
-      
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        });
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
       }
-    }, 1000);
 
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000),
+      });
+    };
+
+    const timer = setInterval(updateTimer, 1000);
+    updateTimer();
+    
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-revealed');
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-    document.querySelectorAll('.scroll-reveal').forEach((el) => {
-      observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [mounted]);
+  const marqueeItems = [
+    "🔥 Rahul just completed Day 23",
+    "💪 Priya submitted her GitHub",
+    "🚀 Arjun got an internship offer",
+    "⭐ Sneha maintained 30-day streak",
+    "🎯 Vikram from VIT cracked Google",
+    "🏆 Ankit hit Day 60",
+    "💻 Deepika deployed her first app",
+    "🌟 Rohan got shortlisted at Flipkart",
+    "🔥 Meera completed AI/ML track",
+    "🚀 Karan built 3 projects this week"
+  ];
 
   return (
-    <div className="bg-[#030303] min-h-screen text-zinc-100 font-sans selection:bg-orange-500/30 flex flex-col items-center">
+    <div className="bg-black min-h-screen text-white font-sans selection:bg-[#f97316] selection:text-white flex justify-center">
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes pulseGlow {
-          0%, 100% { box-shadow: 0 0 20px 0px rgba(249,115,22,0.4); }
-          50% { box-shadow: 0 0 40px 5px rgba(249,115,22,0.7); }
-        }
-        .btn-pulse-glow {
-          animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes shimmer {
-          0% { transform: translateX(-100%) skewX(-15deg); }
-          100% { transform: translateX(200%) skewX(-15deg); }
-        }
-        .btn-shimmer::after {
-          content: '';
-          position: absolute;
-          top: 0; left: 0; width: 50%; height: 100%;
-          background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
-          animation: shimmer 2.5s infinite;
-        }
-        @keyframes ringGlow {
-          0%, 100% { box-shadow: 0 0 5px rgba(249,115,22,0.3); border-color: rgba(249,115,22,0.3); }
-          50% { box-shadow: 0 0 15px rgba(249,115,22,0.8); border-color: rgba(249,115,22,0.8); }
-        }
-        .animate-ring-glow {
-          animation: ringGlow 2s infinite;
-        }
         @keyframes marquee {
           0% { transform: translateX(0%); }
-          100% { transform: translateX(-100%); }
+          100% { transform: translateX(-50%); }
         }
         .animate-marquee {
-          animation: marquee 25s linear infinite;
+          animation: marquee 30s linear infinite;
         }
-        @keyframes letterReveal {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeInSlide {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-letter-reveal {
-          animation: letterReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .animate-fade-slide {
+          animation: fadeInSlide 0.5s ease-out forwards;
         }
-        @keyframes float {
-          0% { transform: translateY(100vh); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateY(-10vh); opacity: 0; }
-        }
-        .animate-float {
-          animation-name: float;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(30px);
-          transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .scroll-reveal.is-revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .stagger-1 { transition-delay: 0.1s; }
-        .stagger-2 { transition-delay: 0.2s; }
-        .stagger-3 { transition-delay: 0.3s; }
       `}} />
 
-      <div className="w-full max-w-[430px] min-h-screen relative flex flex-col bg-[#050505] shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-x-hidden border-x border-zinc-900/50">
+      <div className="w-full max-w-[390px] bg-[#0a0a0a] min-h-screen relative overflow-hidden shadow-2xl shadow-[#f97316]/5 sm:border-x sm:border-white/5">
         
-        {/* Floating Particles Background */}
-        <Particles />
+        {/* SECTION 1 - TOP BANNER */}
+        <div className="w-full bg-[#f97316] py-2 px-4 text-center z-50 relative">
+          <p className="text-white text-xs font-medium tracking-wide">
+            🌙 Late night grind? You're exactly who we're looking for.
+          </p>
+        </div>
 
-        {/* Ambient background glows */}
-        <div className="absolute top-[-5%] left-1/2 -translate-x-1/2 w-[150%] h-[300px] bg-orange-600/10 blur-[100px] pointer-events-none rounded-full z-0"></div>
-        <div className="absolute top-[40%] right-[-50%] w-[100%] h-[300px] bg-amber-600/5 blur-[120px] pointer-events-none rounded-full z-0"></div>
-
-        {/* Sticky Header Group */}
-        <div className="sticky top-0 z-50 w-full flex flex-col">
-          {/* Top Banner */}
-          <div className="bg-gradient-to-r from-orange-950/80 via-orange-900/80 to-orange-950/80 border-b border-orange-500/30 text-orange-200 text-xs py-2.5 px-4 text-center font-medium backdrop-blur-md shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-            <span className="animate-pulse inline-block mr-1">🌙</span> Late night grind? You're exactly who we're looking for.
-          </div>
-
-          {/* Navbar */}
-          <nav className="flex items-center justify-between px-5 py-3 bg-[#050505]/80 backdrop-blur-md border-b border-zinc-800/50">
-            <div className="text-xl font-black tracking-tighter text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]">
-              ABTalks
-            </div>
-            <Link href="/dashboard" className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white shadow-[0_0_15px_rgba(249,115,22,0.4)] text-xs font-bold rounded-full transition-colors relative overflow-hidden btn-shimmer group">
+        {/* SECTION 2 - STICKY NAVBAR */}
+        <nav className="sticky top-0 w-full z-40 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10 px-5 py-3 flex justify-between items-center">
+          <div className="text-[#f97316] font-bold text-xl tracking-tighter">ABTalks</div>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="text-gray-300 text-sm font-semibold hover:text-white transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/dashboard" className="bg-[#f97316] text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-[#ea580c] transition-colors">
               Join Now
             </Link>
-          </nav>
+          </div>
+        </nav>
 
-          {/* Social Proof Marquee */}
-          <div className="w-full bg-[#050505]/90 backdrop-blur-md border-b border-zinc-800/50 py-2 overflow-hidden flex whitespace-nowrap">
-            <div className="animate-marquee inline-block text-[11px] font-bold text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]">
-              <span className="mx-4">🔥 Rahul just completed Day 23</span> • 
-              <span className="mx-4">💪 Priya submitted her GitHub</span> • 
-              <span className="mx-4">🚀 Arjun got an internship offer</span> • 
-              <span className="mx-4">⭐ Sneha maintained 30-day streak</span> •
-            </div>
-            <div className="animate-marquee inline-block text-[11px] font-bold text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" aria-hidden="true">
-              <span className="mx-4">🔥 Rahul just completed Day 23</span> • 
-              <span className="mx-4">💪 Priya submitted her GitHub</span> • 
-              <span className="mx-4">🚀 Arjun got an internship offer</span> • 
-              <span className="mx-4">⭐ Sneha maintained 30-day streak</span> •
-            </div>
+        {/* SECTION 3 - SCROLLING TICKER */}
+        <div className="w-full bg-black border-b border-white/5 py-2.5 overflow-hidden flex relative">
+          <div className="flex whitespace-nowrap animate-marquee w-max">
+            {marqueeItems.map((item, i) => (
+              <span key={i} className="text-gray-400 text-xs mx-4 font-medium">{item} •</span>
+            ))}
+            {/* Duplicate list for seamless looping */}
+            {marqueeItems.map((item, i) => (
+              <span key={`dup-${i}`} className="text-gray-400 text-xs mx-4 font-medium">{item} •</span>
+            ))}
           </div>
         </div>
 
-        <main className="flex-1 px-5 relative z-10 pb-24 mt-4">
+        {/* SECTION 4 - HERO */}
+        <section className="px-5 pt-16 pb-10 flex flex-col relative text-center">
+          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#f97316]/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-          {/* Hero Section */}
-          <section className="text-center pt-8 pb-10 flex flex-col items-center scroll-reveal">
-            
-            <div className="relative mb-2">
-              <div className="absolute inset-0 bg-orange-500/20 blur-2xl rounded-full"></div>
-              <AnimatedHeadline />
-            </div>
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] relative z-10 mb-4"
+              style={{
+                background: 'linear-gradient(to bottom, #ffffff, #f97316)',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                textShadow: '0 0 60px rgba(249,115,22,0.5)'
+              }}>
+            Build your coding habit.<br />Get discovered.
+          </h1>
 
-            <TypedText />
-
-            <p className="text-zinc-400 text-[16px] leading-relaxed mb-6 mt-6 max-w-[300px] font-medium">
-              Join 500+ top students in a 60-day challenge. Build daily, submit proof, get hired.
-            </p>
-
-            {/* Avatars Row */}
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <div className="flex -space-x-3">
-                <img className="w-8 h-8 rounded-full border-2 border-[#050505] bg-zinc-800 relative z-50" src="https://api.dicebear.com/7.x/notionists/svg?seed=A" alt="Avatar" />
-                <img className="w-8 h-8 rounded-full border-2 border-[#050505] bg-zinc-800 relative z-40" src="https://api.dicebear.com/7.x/notionists/svg?seed=B" alt="Avatar" />
-                <img className="w-8 h-8 rounded-full border-2 border-[#050505] bg-zinc-800 relative z-30" src="https://api.dicebear.com/7.x/notionists/svg?seed=C" alt="Avatar" />
-                <img className="w-8 h-8 rounded-full border-2 border-[#050505] bg-zinc-800 relative z-20" src="https://api.dicebear.com/7.x/notionists/svg?seed=D" alt="Avatar" />
-                <img className="w-8 h-8 rounded-full border-2 border-[#050505] bg-zinc-800 relative z-10" src="https://api.dicebear.com/7.x/notionists/svg?seed=E" alt="Avatar" />
-              </div>
-              <p className="text-xs font-semibold text-zinc-400 text-left">Join <span className="text-orange-400"><CountUp end={500} duration={2000} />+</span> students<br/>already building</p>
-            </div>
-
-            <Link
-              href="/dashboard"
-              className="w-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-bold text-lg py-4.5 rounded-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 btn-pulse-glow relative overflow-hidden btn-shimmer group"
-            >
-              Start Your 60-Day Journey
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Link>
-
-            {/* Live Countdown Timer */}
-            <div className="mt-10 flex flex-col items-center w-full max-w-[340px]">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                <p className="text-zinc-300 text-xs font-bold uppercase tracking-widest">Next cohort begins in</p>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-3 w-full">
-                {/* Days */}
-                <div className="flex flex-col items-center bg-gradient-to-b from-zinc-800/80 to-[#050505] border border-zinc-700/50 rounded-2xl py-3 backdrop-blur-md shadow-inner shadow-zinc-600/20 animate-ring-glow">
-                  <span className="text-2xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]">{mounted ? String(timeLeft.days).padStart(2, '0') : '00'}</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Days</span>
-                </div>
-                {/* Hours */}
-                <div className="flex flex-col items-center bg-gradient-to-b from-zinc-800/80 to-[#050505] border border-zinc-700/50 rounded-2xl py-3 backdrop-blur-md shadow-inner shadow-zinc-600/20 animate-ring-glow">
-                  <span className="text-2xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]">{mounted ? String(timeLeft.hours).padStart(2, '0') : '00'}</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Hours</span>
-                </div>
-                {/* Minutes */}
-                <div className="flex flex-col items-center bg-gradient-to-b from-zinc-800/80 to-[#050505] border border-zinc-700/50 rounded-2xl py-3 backdrop-blur-md shadow-inner shadow-zinc-600/20 animate-ring-glow">
-                  <span className="text-2xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]">{mounted ? String(timeLeft.minutes).padStart(2, '0') : '00'}</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-1">Mins</span>
-                </div>
-                {/* Seconds */}
-                <div className="flex flex-col items-center bg-gradient-to-b from-zinc-800/80 to-[#050505] border border-zinc-700/50 rounded-2xl py-3 backdrop-blur-md shadow-inner shadow-zinc-600/20 animate-ring-glow">
-                  <span className="text-2xl font-black text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]">{mounted ? String(timeLeft.seconds).padStart(2, '0') : '00'}</span>
-                  <span className="text-[9px] text-orange-400 font-bold uppercase tracking-wider mt-1">Secs</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Stats Row */}
-          <section className="flex justify-between items-center py-8 border-y border-zinc-800/50 my-6 scroll-reveal stagger-1">
-            <div className="flex flex-col items-center text-center px-2">
-              <span className="text-2xl font-black text-white mb-1">{mounted ? <CountUp end={500} duration={2000} /> : "0"}<span className="text-orange-500">+</span></span>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Students</span>
-            </div>
-            <div className="w-px h-10 bg-zinc-800/80"></div>
-            <div className="flex flex-col items-center text-center px-2">
-              <span className="text-2xl font-black text-white mb-1">{mounted ? <CountUp end={60} duration={2000} /> : "0"}</span>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Days</span>
-            </div>
-            <div className="w-px h-10 bg-zinc-800/80"></div>
-            <div className="flex flex-col items-center text-center px-2">
-              <span className="text-2xl font-black text-white mb-1">Top</span>
-              <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Companies</span>
-            </div>
-          </section>
-
-          {/* Tracks Available */}
-          <section className="py-8 scroll-reveal">
-            <h3 className="text-xl font-black text-white mb-6 tracking-tight text-center">Tracks Available</h3>
-            <div className="flex flex-col gap-3">
-              <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex items-center gap-4 transition-colors hover:bg-zinc-800/50 hover:border-orange-500/30">
-                <div className="text-3xl bg-zinc-800 rounded-xl p-2 w-14 h-14 flex items-center justify-center border border-zinc-700">💻</div>
-                <div>
-                  <h4 className="font-bold text-white text-sm">Web Development</h4>
-                  <p className="text-xs text-zinc-400 mt-1">Build full-stack web apps with Next.js, React, and Node.js.</p>
-                </div>
-              </div>
-              <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex items-center gap-4 transition-colors hover:bg-zinc-800/50 hover:border-orange-500/30">
-                <div className="text-3xl bg-zinc-800 rounded-xl p-2 w-14 h-14 flex items-center justify-center border border-zinc-700">📱</div>
-                <div>
-                  <h4 className="font-bold text-white text-sm">App Development</h4>
-                  <p className="text-xs text-zinc-400 mt-1">Create cross-platform mobile applications using React Native or Flutter.</p>
-                </div>
-              </div>
-              <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-2xl flex items-center gap-4 transition-colors hover:bg-zinc-800/50 hover:border-orange-500/30">
-                <div className="text-3xl bg-zinc-800 rounded-xl p-2 w-14 h-14 flex items-center justify-center border border-zinc-700">🤖</div>
-                <div>
-                  <h4 className="font-bold text-white text-sm">AI/ML</h4>
-                  <p className="text-xs text-zinc-400 mt-1">Master machine learning, data science, and build intelligent models.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Feature Cards */}
-          <section className="py-8 scroll-reveal">
-            <h3 className="text-xl font-black text-white mb-6 tracking-tight text-center">Why join ABTalks?</h3>
-            <div className="space-y-4">
-              
-              {/* Card 1 Wrapper */}
-              <div className="p-[1px] rounded-[1.6rem] bg-gradient-to-br from-orange-500/30 via-zinc-800/20 to-orange-500/10 hover:from-orange-500/50 hover:to-orange-500/30 transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.05)] hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:scale-[1.02]">
-                <div className="bg-[#0a0a0a] border border-transparent p-6 rounded-[1.55rem] backdrop-blur-md group relative overflow-hidden h-full">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/10 transition-all duration-500"></div>
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 flex items-center justify-center mb-4 border border-orange-500/20 group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                  </div>
-                  <h4 className="font-bold text-white mb-2 text-lg">Daily Coding Habit</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed">Stop procrastinating. Commit code every single day for 60 days and build unstoppable momentum.</p>
-                </div>
-              </div>
-
-              {/* Card 2 Wrapper */}
-              <div className="p-[1px] rounded-[1.6rem] bg-gradient-to-br from-amber-500/30 via-zinc-800/20 to-amber-500/10 hover:from-amber-500/50 hover:to-amber-500/30 transition-all duration-300 shadow-[0_0_15px_rgba(245,158,11,0.05)] hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:scale-[1.02]">
-                <div className="bg-[#0a0a0a] border border-transparent p-6 rounded-[1.55rem] backdrop-blur-md group relative overflow-hidden h-full">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500"></div>
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center mb-4 border border-amber-500/20 group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                  </div>
-                  <h4 className="font-bold text-white mb-2 text-lg">Real-World Projects</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed">Choose Web Dev, App Dev, or AI/ML. Build projects that actually stand out on your resume.</p>
-                </div>
-              </div>
-
-              {/* Card 3 Wrapper */}
-              <div className="p-[1px] rounded-[1.6rem] bg-gradient-to-br from-orange-500/30 via-zinc-800/20 to-orange-500/10 hover:from-orange-500/50 hover:to-orange-500/30 transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.05)] hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:scale-[1.02]">
-                <div className="bg-[#0a0a0a] border border-transparent p-6 rounded-[1.55rem] backdrop-blur-md group relative overflow-hidden h-full">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl group-hover:bg-orange-500/10 transition-all duration-500"></div>
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 flex items-center justify-center mb-4 border border-orange-500/20 group-hover:scale-110 transition-transform duration-300">
-                    <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h4 className="font-bold text-white mb-2 text-lg">Get Discovered</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed">Your verified proof of work is sent directly to recruiters. Skip the line and get interviews.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* How It Works Timeline */}
-          <section className="py-10 scroll-reveal">
-            <h3 className="text-xl font-black text-white mb-10 tracking-tight text-center">How It Works</h3>
-            <div className="relative pl-6 pr-2">
-              {/* Connecting Line */}
-              <div className="absolute left-[39px] top-6 bottom-10 w-1 bg-gradient-to-b from-orange-500 via-orange-500/50 to-transparent rounded-full"></div>
-
-              {/* Step 1 */}
-              <div className="relative mb-12 pl-12 group cursor-default scroll-reveal">
-                <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-[#050505] border-4 border-orange-500 flex items-center justify-center z-10 shadow-[0_0_15px_rgba(249,115,22,0.6)] group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.8)] transition-all duration-300">
-                  <span className="text-sm font-black text-orange-500">1</span>
-                </div>
-                <h4 className="font-bold text-white text-lg mb-2 group-hover:text-orange-400 transition-colors">Pick a Track</h4>
-                <p className="text-zinc-400 text-sm leading-relaxed">Register and choose the domain you want to master. We provide the curriculum.</p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="relative mb-12 pl-12 group cursor-default scroll-reveal stagger-1">
-                <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-[#050505] border-4 border-orange-500/50 flex items-center justify-center z-10 group-hover:border-orange-500 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all duration-300">
-                  <span className="text-sm font-black text-zinc-300 group-hover:text-orange-500 transition-colors">2</span>
-                </div>
-                <h4 className="font-bold text-white text-lg mb-2 group-hover:text-orange-400 transition-colors">Build Daily</h4>
-                <p className="text-zinc-400 text-sm leading-relaxed">Follow daily tasks, push commits to GitHub, and maintain your 60-day streak.</p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="relative pl-12 group cursor-default scroll-reveal stagger-2">
-                <div className="absolute left-0 top-1 w-10 h-10 rounded-full bg-[#050505] border-4 border-orange-500/20 flex items-center justify-center z-10 group-hover:border-orange-500 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-all duration-300">
-                  <span className="text-sm font-black text-zinc-400 group-hover:text-orange-500 transition-colors">3</span>
-                </div>
-                <h4 className="font-bold text-white text-lg mb-2 group-hover:text-orange-400 transition-colors">Get Hired</h4>
-                <p className="text-zinc-400 text-sm leading-relaxed">Share your progress on LinkedIn. We share your portfolio with our hiring partners.</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Testimonials */}
-          <section className="py-8 scroll-reveal">
-            <h3 className="text-xl font-black text-white mb-6 tracking-tight text-center">Student Success</h3>
-            <div className="flex flex-col gap-4">
-              
-              <div className="bg-gradient-to-br from-zinc-900/80 to-zinc-900/30 border border-zinc-800/80 p-5 rounded-3xl relative overflow-hidden">
-                <div className="absolute top-4 right-4 text-orange-500/20 text-4xl font-serif">"</div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700">
-                    <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Rahul&backgroundColor=f97316" alt="Rahul" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-white text-[15px]">Rahul S.</h5>
-                    <div className="inline-flex items-center gap-1.5 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Web Dev Track</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-zinc-300 text-sm leading-relaxed">"The 60-day streak forced me to be consistent. I built 3 solid projects and got an internship offer in week 5!"</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-zinc-900/80 to-zinc-900/30 border border-zinc-800/80 p-5 rounded-3xl relative overflow-hidden">
-                <div className="absolute top-4 right-4 text-orange-500/20 text-4xl font-serif">"</div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700">
-                    <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Priya&backgroundColor=10b981" alt="Priya" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-white text-[15px]">Priya M.</h5>
-                    <div className="inline-flex items-center gap-1.5 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">AI/ML Track</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-zinc-300 text-sm leading-relaxed">"Being part of a community of 500+ driven students kept me motivated on days I wanted to quit. Highly recommend."</p>
-              </div>
-
-            </div>
-          </section>
-
-        </main>
-
-        {/* Footer */}
-        <footer className="mt-auto px-6 py-10 border-t border-zinc-900 bg-[#020202] text-center relative z-10 scroll-reveal">
-          <h2 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-amber-500 mb-4">
-            ABTalks
-          </h2>
-          <div className="flex justify-center gap-6 mb-8">
-            <a href="#" className="text-zinc-500 hover:text-orange-400 text-sm font-medium transition-colors">Privacy</a>
-            <a href="#" className="text-zinc-500 hover:text-orange-400 text-sm font-medium transition-colors">Terms</a>
-            <a href="#" className="text-zinc-500 hover:text-orange-400 text-sm font-medium transition-colors">Contact</a>
+          <div className="h-8 md:h-10 mb-6 relative z-10">
+            <span key={roleIndex} className="text-xl md:text-2xl font-bold text-orange-500 block animate-fade-slide">
+              {roles[roleIndex]}
+            </span>
           </div>
-          <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">© 2026 ABTalks. Elevating Indian Engineers.</p>
+
+          <p className="text-gray-300 text-sm md:text-base max-w-md mx-auto leading-relaxed relative z-10">
+            Join 500+ top students in a 60-day challenge. Build daily, submit proof, get hired.
+          </p>
+
+          <div className="flex justify-center items-center gap-3 mt-8 relative z-10">
+            <div className="flex -space-x-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0a0a] bg-gray-800 overflow-hidden">
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 15}`} alt="Student avatar" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            <span className="text-xs text-gray-300 font-medium">
+              <strong className="text-white">500+</strong> students already building
+            </span>
+          </div>
+
+          <Link href="/dashboard" className="mt-10 w-full block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:scale-[1.02] transition-all relative z-10">
+            Start Your 60-Day Journey →
+          </Link>
+
+          <div className="mt-10 bg-black/50 border border-white/10 rounded-2xl p-5 relative z-10">
+            <p className="text-center text-[#f97316] text-xs font-bold tracking-widest mb-3">NEXT COHORT BEGINS IN</p>
+            <div className="flex justify-between gap-2 flex-nowrap">
+              {[
+                { label: 'DAYS', value: timeLeft.days },
+                { label: 'HOURS', value: timeLeft.hours },
+                { label: 'MINS', value: timeLeft.minutes },
+                { label: 'SECS', value: timeLeft.seconds },
+              ].map((item, idx) => (
+                <div key={idx} className="flex flex-col items-center flex-1 bg-[#0a0a0a] border border-[#f97316]/30 shadow-[0_0_10px_rgba(249,115,22,0.1)] rounded-lg py-2">
+                  <span className="text-[#f97316] font-mono text-2xl font-bold">
+                    {mounted ? item.value.toString().padStart(2, '0') : '00'}
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-medium mt-1">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SECTION 5 - STATS ROW */}
+        <section className="px-5 py-8 border-y border-white/5 bg-black/30">
+          <div className="flex justify-between items-center text-center">
+            <CountUpStat end={500} suffix="+" label="Students Enrolled" />
+            <div className="w-px h-10 bg-white/10"></div>
+            <CountUpStat end={60} label="Days of Building" />
+            <div className="w-px h-10 bg-white/10"></div>
+            <CountUpStat end={50} prefix="Top " label="Companies Hiring" />
+          </div>
+        </section>
+
+        {/* SECTION 6 - PROOF OF WORK PIPELINE */}
+        <section className="px-5 py-12">
+          <h2 className="text-2xl font-bold text-white text-center">How Proof of Work <br/><span className="text-[#f97316]">Gets You Hired</span></h2>
+          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          
+          <div className="relative pl-6 space-y-8">
+            <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-[#f97316] via-[#f97316]/50 to-transparent"></div>
+            
+            {[
+              { num: 1, icon: "🏗️", title: "Build Daily", desc: "Complete your daily coding challenge" },
+              { num: 2, icon: "💻", title: "Push to GitHub", desc: "Every commit is public proof" },
+              { num: 3, icon: "📢", title: "Post on LinkedIn", desc: "Build your personal brand daily" },
+              { num: 4, icon: "🎯", title: "Get Discovered", desc: "Recruiters find YOU, not the other way" },
+            ].map((step, idx) => (
+              <div key={idx} className="relative pl-6">
+                <div className="absolute left-[-25px] top-0 w-8 h-8 rounded-full bg-[#0a0a0a] border-2 border-[#f97316] flex items-center justify-center text-[#f97316] font-bold text-sm shadow-[0_0_10px_rgba(249,115,22,0.4)]">
+                  {step.num}
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-[#f97316]/50 transition-colors">
+                  <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
+                    <span>{step.icon}</span> {step.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm">{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 7 - JOURNEY TIMELINE */}
+        <section className="px-5 py-12 bg-black/40">
+          <h2 className="text-2xl font-bold text-white text-center">Your 60-Day <span className="text-[#f97316]">Transformation</span></h2>
+          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          
+          <div className="relative pl-8 space-y-6">
+            <div className="absolute left-4 top-8 bottom-8 w-px bg-white/20 border-l border-dashed border-[#f97316]/50"></div>
+            
+            {[
+              { day: "Day 1", text: "You write your first commit. Scary but exciting." },
+              { day: "Day 15", text: "You've built 3 projects. Your GitHub is turning green." },
+              { day: "Day 30", text: "Halfway there. Recruiters start noticing your streak." },
+              { day: "Day 60", text: "You did it. 60 projects. 60 LinkedIn posts. Job offers incoming." },
+            ].map((item, idx) => (
+              <div key={idx} className="relative">
+                <div className="absolute left-[-20px] top-6 w-2 h-2 rounded-full bg-[#f97316] shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>
+                <div className="bg-white/5 border border-white/5 p-6 rounded-xl hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] transition-all">
+                  <div className="mb-3">
+                    <span className="inline-block bg-[#f97316]/20 text-[#f97316] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{item.day}</span>
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed">{item.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 8 - TRACKS */}
+        <section className="px-5 py-12">
+          <h2 className="text-2xl font-bold text-white text-center">Choose Your <span className="text-[#f97316]">Track</span></h2>
+          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: "🌐", title: "Web Development", desc: "Next.js, React, Node.js, full-stack projects" },
+              { icon: "📱", title: "App Development", desc: "React Native, Flutter, mobile-first projects" },
+              { icon: "🤖", title: "AI/ML", desc: "Python, TensorFlow, build intelligent models" },
+              { icon: "📊", title: "Data Science", desc: "SQL, Pandas, real-world data analysis" },
+              { icon: "⚙️", title: "Backend", desc: "APIs, databases, system design" },
+              { icon: "🏆", title: "CP / DSA", desc: "DSA, algorithms, problem solving" },
+            ].map((track, idx) => (
+              <div key={idx} className="bg-[#111] border border-white/5 rounded-xl p-4 transition-all duration-300 group cursor-pointer hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:scale-105">
+                <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">{track.icon}</div>
+                <h3 className="text-white font-bold text-[11px] mb-1.5 leading-tight">{track.title}</h3>
+                <p className="text-gray-500 text-[9px] leading-snug">{track.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 9 - WHY JOIN */}
+        <section className="px-5 py-12 bg-black/40">
+          <h2 className="text-2xl font-bold text-white text-center">What You'll Gain <br/>in <span className="text-[#f97316]">60 Days</span></h2>
+          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          
+          <div className="space-y-4">
+            {[
+              { icon: "🚀", title: "A Green GitHub", desc: "60 consecutive days of commits. Recruiters check this first." },
+              { icon: "📱", title: "A LinkedIn Brand", desc: "60 posts showing your growth. Your profile becomes a magnet." },
+              { icon: "💼", title: "Job-Ready Portfolio", desc: "Real projects, real proof, real opportunities." },
+            ].map((benefit, idx) => (
+              <div key={idx} className="flex gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 flex items-center justify-center text-xl shrink-0 h-12 w-12">
+                  {benefit.icon}
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm mb-1">{benefit.title}</h3>
+                  <p className="text-gray-400 text-xs leading-relaxed">{benefit.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 10 - TESTIMONIALS */}
+        <section className="px-5 py-12">
+          <h2 className="text-2xl font-bold text-white text-center">Students Who <span className="text-[#f97316]">Made It</span></h2>
+          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          
+          <div className="space-y-5">
+            {[
+              { 
+                seed: "rahul", 
+                name: "Rahul S.", 
+                badge: "WEB DEV", 
+                college: "3rd year, NIT Trichy", 
+                quote: "The 60-day streak forced me to be consistent. Built 3 projects, got internship at Razorpay in week 5." 
+              },
+              { 
+                seed: "priya", 
+                name: "Priya M.", 
+                badge: "AI/ML", 
+                college: "2nd year, BITS Pilani", 
+                quote: "Community of 500+ students kept me going. Cracked my Groww interview after Day 45." 
+              }
+            ].map((testimonial, idx) => (
+              <div key={idx} className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-[#f97316]/5 rounded-bl-full pointer-events-none"></div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full border border-white/10 bg-gray-800 overflow-hidden shrink-0">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${testimonial.seed}`} alt={testimonial.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-white font-bold text-sm leading-tight">{testimonial.name}</h4>
+                    <p className="text-gray-500 text-[10px]">{testimonial.college}</p>
+                  </div>
+                  <div>
+                    <span className="bg-[#f97316]/10 text-[#f97316] text-[8px] font-bold px-2 py-1 rounded border border-[#f97316]/20 whitespace-nowrap">
+                      {testimonial.badge}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-yellow-500 text-xs mb-2 tracking-widest drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]">⭐⭐⭐⭐⭐</div>
+                <p className="text-gray-300 text-sm italic leading-relaxed">"{testimonial.quote}"</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 10.5 - FAQ */}
+        <section className="px-5 py-12 bg-black/30">
+          <h2 className="text-2xl font-bold text-white text-center">Frequently Asked <span className="text-[#f97316]">Questions</span></h2>
+          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          
+          <div className="space-y-3">
+            {[
+              { q: "Is ABTalks free?", a: "Yes, completely free. No credit card required." },
+              { q: "What if I miss a day?", a: "Life happens. You can pause once. Consistency is the whole point." },
+              { q: "How do recruiters see my work?", a: "Your GitHub and LinkedIn are public. We also share top profiles with hiring partners." },
+              { q: "Which track should I pick?", a: "Pick what excites you most. All tracks lead to a job-ready portfolio." }
+            ].map((faq, idx) => (
+              <details key={idx} className="group bg-white/5 border border-white/10 rounded-xl p-4 [&_summary::-webkit-details-marker]:hidden cursor-pointer hover:border-white/20 transition-colors">
+                <summary className="flex justify-between items-center font-bold text-sm text-white list-none">
+                  {faq.q}
+                  <span className="transition duration-300 group-open:rotate-180 text-[#f97316]">
+                    <svg fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="20">
+                      <path d="M6 9l6 6 6-6"></path>
+                    </svg>
+                  </span>
+                </summary>
+                <p className="text-gray-400 text-xs mt-3 leading-relaxed">
+                  {faq.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 11 - FINAL CTA */}
+        <section className="px-5 py-16 text-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.15) 0%, transparent 70%)' }}>
+          <div className="absolute inset-0 bg-[#f97316]/10 blur-[100px] pointer-events-none rounded-full scale-150"></div>
+          <h2 className="text-3xl font-extrabold text-white mb-3 relative z-10">Ready to start building?</h2>
+          <p className="text-gray-400 text-sm mb-8 relative z-10 px-4">
+            Join 500+ students. 60 days. Real commits. Real opportunities.
+          </p>
+          <Link href="/dashboard" className="w-full bg-[#f97316] text-white font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_30px_rgba(249,115,22,0.7)] hover:bg-[#ea580c] transition-all relative z-10 block text-center">
+            Start Your 60-Day Journey →
+          </Link>
+          <p className="text-gray-500 text-xs mt-4 relative z-10">Free to join. No credit card. Just commitment.</p>
+        </section>
+
+        {/* SECTION 12 - FOOTER */}
+        <footer className="px-5 py-8 border-t border-white/5 bg-[#050505] text-center">
+          <div className="text-[#f97316] font-bold text-xl tracking-tighter mb-4">ABTalks</div>
+          <div className="flex justify-center gap-4 mb-6">
+            <a href="mailto:hello@abtalks.in" className="text-gray-400 hover:text-[#f97316] text-xs transition-colors">Contact</a>
+            <span className="text-white/20">•</span>
+            <a href="https://github.com/Abhishek-singh-9/abtalks-redesign" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#f97316] text-xs transition-colors">GitHub</a>
+          </div>
+          <p className="text-gray-600 text-[10px]">© 2026 ABTalks. Elevating Indian Engineers. One commit at a time.</p>
         </footer>
+
       </div>
     </div>
   );

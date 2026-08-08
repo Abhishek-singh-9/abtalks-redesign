@@ -35,3 +35,18 @@ In app/page.tsx add floating particle effect, hero headline letter animation, sh
 
 ### Prompt 5 (Antigravity):
 Fixed parsing error in app/page.tsx - missing closing JSX tag. Fixed hero headline showing unicode characters u00A0 instead of spaces between words.
+
+### Prompt 6 (Antigravity):
+Competitor analysis between my site and abtalks-redesign-hackathon.vercel.app from a hackathon judge perspective.
+
+### Prompt 7 (Antigravity):
+Identified landing page issues — broken countdown, zero stats, missing effects, weak testimonials, no FAQ.
+
+### Prompt 8 (Antigravity):
+Fixed metadata title, countdown timer, hardcoded stats, ticker expanded to 10 items.
+
+### Prompt 9 (Antigravity):
+Restored hero section — gradient headline, rotating typed text effect, orange glow.
+
+### Prompt 10 (Antigravity):
+Re-added all visual effects — track card hover glow, timeline cards, section underlines, CTA radial glow, count-up stats, testimonial star ratings, FAQ accordion.
