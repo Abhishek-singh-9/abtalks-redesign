@@ -36,13 +36,17 @@ function CountUpStat({ end, prefix = "", suffix = "", duration = 2000, label }: 
 
   return (
     <div ref={ref} className="flex-1">
-      <div className="text-2xl font-bold text-[#f97316]">
+      <div className="text-2xl font-bold text-[#f97316]" style={{ textShadow: '0 0 20px rgba(249,115,22,0.6)' }}>
         {prefix}{count}{suffix}
       </div>
       <div className="text-[9px] text-gray-500 font-bold mt-1 tracking-wider uppercase">{label}</div>
     </div>
   );
 }
+
+const Divider = () => (
+  <div style={{ height: '1px', background: 'linear-gradient(to right, transparent, #f97316, transparent)' }} />
+);
 
 export default function ABTalksLanding() {
   const [timeLeft, setTimeLeft] = useState({
@@ -119,6 +123,26 @@ export default function ABTalksLanding() {
         .animate-fade-slide {
           animation: fadeInSlide 0.5s ease-out forwards;
         }
+        @keyframes shimmerText {
+          0% { background-position: 0% 50%; }
+          100% { background-position: -200% 50%; }
+        }
+        .animate-shimmer-text {
+          background-size: 200% auto;
+          animation: shimmerText 4s linear infinite;
+        }
+        @keyframes shimmerBtn {
+          0% { transform: translateX(-150%) skewX(-25deg); }
+          100% { transform: translateX(150%) skewX(-25deg); }
+        }
+        .animate-shimmer-btn::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: linear-gradient(to right, transparent, rgba(255,255,255,0.4) 50%, transparent);
+          transform: translateX(-150%) skewX(-25deg);
+          animation: shimmerBtn 3s infinite;
+        }
       `}} />
 
       <div className="w-full max-w-[390px] bg-[#0a0a0a] min-h-screen relative overflow-hidden shadow-2xl shadow-[#f97316]/5 sm:border-x sm:border-white/5">
@@ -160,9 +184,9 @@ export default function ABTalksLanding() {
         <section className="px-5 pt-16 pb-10 flex flex-col relative text-center">
           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#f97316]/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] relative z-10 mb-4"
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] relative z-10 mb-4 animate-shimmer-text"
               style={{
-                background: 'linear-gradient(to bottom, #ffffff, #f97316)',
+                background: 'linear-gradient(to right, #ffffff, #f97316, #ffffff, #f97316, #ffffff)',
                 WebkitBackgroundClip: 'text',
                 color: 'transparent',
                 textShadow: '0 0 60px rgba(249,115,22,0.5)'
@@ -193,7 +217,7 @@ export default function ABTalksLanding() {
             </span>
           </div>
 
-          <Link href="/dashboard" className="mt-10 w-full block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:scale-[1.02] transition-all relative z-10">
+          <Link href="/dashboard" className="mt-10 w-full block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:scale-[1.02] transition-all relative z-10 overflow-hidden animate-shimmer-btn">
             Start Your 60-Day Journey →
           </Link>
 
@@ -227,11 +251,13 @@ export default function ABTalksLanding() {
             <CountUpStat end={50} prefix="Top " label="Companies Hiring" />
           </div>
         </section>
+        
+        <Divider />
 
         {/* SECTION 6 - PROOF OF WORK PIPELINE */}
         <section className="px-5 py-12">
           <h2 className="text-2xl font-bold text-white text-center">How Proof of Work <br/><span className="text-[#f97316]">Gets You Hired</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          <div className="w-12 h-1 bg-orange-500 rounded-full mx-auto mt-2 mb-6" />
           
           <div className="relative pl-6 space-y-8">
             <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-[#f97316] via-[#f97316]/50 to-transparent"></div>
@@ -257,10 +283,12 @@ export default function ABTalksLanding() {
           </div>
         </section>
 
+        <Divider />
+
         {/* SECTION 7 - JOURNEY TIMELINE */}
         <section className="px-5 py-12 bg-black/40">
           <h2 className="text-2xl font-bold text-white text-center">Your 60-Day <span className="text-[#f97316]">Transformation</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          <div className="w-12 h-1 bg-orange-500 rounded-full mx-auto mt-2 mb-6" />
           
           <div className="relative pl-8 space-y-6">
             <div className="absolute left-4 top-8 bottom-8 w-px bg-white/20 border-l border-dashed border-[#f97316]/50"></div>
@@ -273,9 +301,9 @@ export default function ABTalksLanding() {
             ].map((item, idx) => (
               <div key={idx} className="relative">
                 <div className="absolute left-[-20px] top-6 w-2 h-2 rounded-full bg-[#f97316] shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>
-                <div className="bg-white/5 border border-white/5 p-6 rounded-xl hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] transition-all">
+                <div className="bg-white/5 border-y border-r border-white/5 border-l-4 border-l-orange-500 p-6 rounded-xl hover:shadow-[-10px_0_25px_rgba(249,115,22,0.2)] transition-all">
                   <div className="mb-3">
-                    <span className="inline-block bg-[#f97316]/20 text-[#f97316] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{item.day}</span>
+                    <span className="inline-block bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{item.day}</span>
                   </div>
                   <p className="text-gray-300 text-sm leading-relaxed">{item.text}</p>
                 </div>
@@ -283,11 +311,13 @@ export default function ABTalksLanding() {
             ))}
           </div>
         </section>
+        
+        <Divider />
 
         {/* SECTION 8 - TRACKS */}
         <section className="px-5 py-12">
           <h2 className="text-2xl font-bold text-white text-center">Choose Your <span className="text-[#f97316]">Track</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          <div className="w-12 h-1 bg-orange-500 rounded-full mx-auto mt-2 mb-6" />
           
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -298,8 +328,8 @@ export default function ABTalksLanding() {
               { icon: "⚙️", title: "Backend", desc: "APIs, databases, system design" },
               { icon: "🏆", title: "CP / DSA", desc: "DSA, algorithms, problem solving" },
             ].map((track, idx) => (
-              <div key={idx} className="bg-[#111] border border-white/5 rounded-xl p-4 transition-all duration-300 group cursor-pointer hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:scale-105">
-                <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">{track.icon}</div>
+              <div key={idx} className="bg-[#111] border border-white/5 rounded-xl p-4 transition-all duration-300 group cursor-pointer hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] hover:scale-105">
+                <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 group-hover:scale-125 origin-left transition-all duration-300">{track.icon}</div>
                 <h3 className="text-white font-bold text-[11px] mb-1.5 leading-tight">{track.title}</h3>
                 <p className="text-gray-500 text-[9px] leading-snug">{track.desc}</p>
               </div>
@@ -307,10 +337,12 @@ export default function ABTalksLanding() {
           </div>
         </section>
 
+        <Divider />
+
         {/* SECTION 9 - WHY JOIN */}
         <section className="px-5 py-12 bg-black/40">
           <h2 className="text-2xl font-bold text-white text-center">What You'll Gain <br/>in <span className="text-[#f97316]">60 Days</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          <div className="w-12 h-1 bg-orange-500 rounded-full mx-auto mt-2 mb-6" />
           
           <div className="space-y-4">
             {[
@@ -331,10 +363,12 @@ export default function ABTalksLanding() {
           </div>
         </section>
 
+        <Divider />
+
         {/* SECTION 10 - TESTIMONIALS */}
         <section className="px-5 py-12">
           <h2 className="text-2xl font-bold text-white text-center">Students Who <span className="text-[#f97316]">Made It</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          <div className="w-12 h-1 bg-orange-500 rounded-full mx-auto mt-2 mb-6" />
           
           <div className="space-y-5">
             {[
@@ -342,18 +376,18 @@ export default function ABTalksLanding() {
                 seed: "rahul", 
                 name: "Rahul S.", 
                 badge: "WEB DEV", 
-                college: "3rd year, NIT Trichy", 
-                quote: "The 60-day streak forced me to be consistent. Built 3 projects, got internship at Razorpay in week 5." 
+                college: "3rd year NIT Trichy", 
+                quote: "Built 3 projects, got internship at Razorpay in week 5." 
               },
               { 
                 seed: "priya", 
                 name: "Priya M.", 
                 badge: "AI/ML", 
-                college: "2nd year, BITS Pilani", 
-                quote: "Community of 500+ students kept me going. Cracked my Groww interview after Day 45." 
+                college: "2nd year BITS Pilani", 
+                quote: "Cracked my Groww interview after Day 45." 
               }
             ].map((testimonial, idx) => (
-              <div key={idx} className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden">
+              <div key={idx} className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden hover:border-[#f97316]/40 hover:shadow-[0_0_15px_rgba(249,115,22,0.15)] transition-all">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-[#f97316]/5 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full border border-white/10 bg-gray-800 overflow-hidden shrink-0">
@@ -375,18 +409,20 @@ export default function ABTalksLanding() {
             ))}
           </div>
         </section>
+        
+        <Divider />
 
         {/* SECTION 10.5 - FAQ */}
         <section className="px-5 py-12 bg-black/30">
           <h2 className="text-2xl font-bold text-white text-center">Frequently Asked <span className="text-[#f97316]">Questions</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
+          <div className="w-12 h-1 bg-orange-500 rounded-full mx-auto mt-2 mb-6" />
           
           <div className="space-y-3">
             {[
-              { q: "Is ABTalks free?", a: "Yes, completely free. No credit card required." },
-              { q: "What if I miss a day?", a: "Life happens. You can pause once. Consistency is the whole point." },
-              { q: "How do recruiters see my work?", a: "Your GitHub and LinkedIn are public. We also share top profiles with hiring partners." },
-              { q: "Which track should I pick?", a: "Pick what excites you most. All tracks lead to a job-ready portfolio." }
+              { q: "Is ABTalks free?", a: "Yes, completely free." },
+              { q: "What if I miss a day?", a: "You can pause once. Consistency is the point." },
+              { q: "How do recruiters see my work?", a: "Via your public GitHub + LinkedIn. We also share top profiles directly." },
+              { q: "Which track should I pick?", a: "Pick what excites you most." }
             ].map((faq, idx) => (
               <details key={idx} className="group bg-white/5 border border-white/10 rounded-xl p-4 [&_summary::-webkit-details-marker]:hidden cursor-pointer hover:border-white/20 transition-colors">
                 <summary className="flex justify-between items-center font-bold text-sm text-white list-none">
@@ -406,7 +442,7 @@ export default function ABTalksLanding() {
         </section>
 
         {/* SECTION 11 - FINAL CTA */}
-        <section className="px-5 py-16 text-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.15) 0%, transparent 70%)' }}>
+        <section className="px-5 py-16 text-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.12) 0%, transparent 70%)' }}>
           <div className="absolute inset-0 bg-[#f97316]/10 blur-[100px] pointer-events-none rounded-full scale-150"></div>
           <h2 className="text-3xl font-extrabold text-white mb-3 relative z-10">Ready to start building?</h2>
           <p className="text-gray-400 text-sm mb-8 relative z-10 px-4">
