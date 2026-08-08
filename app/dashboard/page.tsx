@@ -1,5 +1,6 @@
 import student from '@/data/student.json';
 import tasks from '@/data/tasks.json';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { today } = tasks;
@@ -115,11 +116,11 @@ export default function DashboardPage() {
               </span>
             </div>
             
-            <div className="bg-gradient-to-b from-zinc-900 to-zinc-950 border border-zinc-800 p-5 rounded-3xl relative overflow-hidden shadow-xl shadow-black/50">
-              <div className="absolute right-0 top-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+            <Link href="/day/12" className="block bg-gradient-to-b from-zinc-900 to-zinc-950 border border-zinc-800 hover:border-orange-500/50 p-5 rounded-3xl relative overflow-hidden shadow-xl shadow-black/50 transition-colors group cursor-pointer">
+              <div className="absolute right-0 top-0 w-32 h-32 bg-orange-500/10 group-hover:bg-orange-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none transition-colors"></div>
               
               <div className="flex justify-between items-start mb-3 relative z-10">
-                <h3 className="text-zinc-100 font-bold text-lg leading-tight pr-4">{today.title}</h3>
+                <h3 className="text-zinc-100 group-hover:text-orange-400 font-bold text-lg leading-tight pr-4 transition-colors">{today.title}</h3>
                 
                 {today.difficulty === 'Easy' && (
                   <span className="bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider whitespace-nowrap">
@@ -155,11 +156,11 @@ export default function DashboardPage() {
                   </svg>
                   {today.estimatedTime}
                 </div>
-                <button className="bg-orange-500 hover:bg-orange-400 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-colors shadow-lg shadow-orange-500/25">
+                <div className="bg-orange-500 group-hover:bg-orange-400 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-colors shadow-lg shadow-orange-500/25 flex items-center justify-center">
                   Start Task
-                </button>
+                </div>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Achievements */}
