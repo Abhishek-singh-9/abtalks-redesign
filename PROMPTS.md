@@ -25,3 +25,13 @@ Design a mobile-first landing page for ABTalks, a 60-day coding challenge platfo
 
 ### Prompt 2 (Antigravity):
 Replace the content of app/page.tsx with a proper Next.js React component for ABTalks landing page with dark theme, orange colors, hero section, stats, feature cards, how it works, testimonials and footer. Use Tailwind CSS only. Make it a proper Next.js page component with export default.
+
+## Landing Page Improvements
+### Prompt 3 (Antigravity):
+In app/page.tsx, add late night banner, sticky navbar with Join Now button, scrolling marquee ticker, avatar row, countdown timer, track cards, feature cards with glow effects and hover animations.
+
+### Prompt 4 (Antigravity):
+In app/page.tsx add floating particle effect, hero headline letter animation, shimmer on CTA button, count up stats animation, glowing countdown timer, typed text effect cycling through Web Developer, App Developer, AI Engineer.
+
+### Prompt 5 (Antigravity):
+Fixed parsing error in app/page.tsx - missing closing JSX tag. Fixed hero headline showing unicode characters u00A0 instead of spaces between words.
