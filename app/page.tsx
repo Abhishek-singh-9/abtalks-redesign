@@ -1,398 +1,69 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-const roles = ["Web Developer", "App Developer", "AI Engineer", "Data Scientist", "Backend Dev", "CP Champion"];
+const roles = ["Software Engineer", "Frontend Developer", "AI Engineer", "Data Analyst"];
+type TimeLeft = { days: number; hours: number; minutes: number; seconds: number };
 
-function CountUpStat({ end, prefix = "", suffix = "", duration = 2000, label }: { end: number, prefix?: string, suffix?: string, duration?: number, label: string }) {
+function CountUpStat({ value, suffix = "", label }: { value: number; suffix?: string; label: string }) {
   const [count, setCount] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated) {
-          setHasAnimated(true);
-          let startTime: number | null = null;
-          const animate = (timestamp: number) => {
-            if (!startTime) startTime = timestamp;
-            const progress = Math.min((timestamp - startTime) / duration, 1);
-            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-            setCount(Math.floor(easeProgress * end));
-            if (progress < 1) {
-              requestAnimationFrame(animate);
-            } else {
-              setCount(end);
-            }
-          };
-          requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.1 }
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || started) return;
+      setStarted(true);
+      const start = performance.now();
+      const frame = (now: number) => {
+        const progress = Math.min((now - start) / 900, 1);
+        setCount(Math.round(value * (1 - Math.pow(1 - progress, 3))));
+        if (progress < 1) requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+    }, { threshold: 0.3 });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [end, duration, hasAnimated]);
+  }, [started, value]);
+  return <div ref={ref}><p className="text-3xl font-semibold tracking-[-0.04em] text-white">{count}{suffix}</p><p className="mt-1 text-xs text-slate-400">{label}</p></div>;
+}
 
-  return (
-    <div ref={ref} className="flex-1">
-      <div className="text-2xl font-bold text-[#f97316]">
-        {prefix}{count}{suffix}
-      </div>
-      <div className="text-[9px] text-gray-500 font-bold mt-1 tracking-wider uppercase">{label}</div>
-    </div>
-  );
+function ArrowIcon() {
+  return <svg aria-hidden="true" className="h-4 w-4" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
 export default function ABTalksLanding() {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
   const [roleIndex, setRoleIndex] = useState(0);
-
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRoleIndex((prev) => (prev + 1) % roles.length);
-    }, 2000);
-    return () => clearInterval(interval);
+    const interval = window.setInterval(() => setRoleIndex((current) => (current + 1) % roles.length), 2600);
+    return () => window.clearInterval(interval);
+  }, []);
+  useEffect(() => {
+    const deadline = new Date("2026-10-01T00:00:00+05:30").getTime();
+    const timer = window.setInterval(() => {
+      const distance = Math.max(deadline - Date.now(), 0);
+      setTimeLeft({ days: Math.floor(distance / 86_400_000), hours: Math.floor((distance / 3_600_000) % 24), minutes: Math.floor((distance / 60_000) % 60), seconds: Math.floor((distance / 1_000) % 60) });
+    }, 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const targetDate = new Date("2026-09-01T00:00:00").getTime();
+  const steps = [["01", "Build deliberately", "Work through a focused daily brief designed to compound into tangible skills."], ["02", "Publish your proof", "Turn your GitHub activity and project updates into a body of work recruiters can inspect."], ["03", "Get career-ready", "Receive a portfolio with context, consistency, and the confidence to show it."]];
+  const tracks = ["Full-stack engineering", "Frontend & product", "AI & machine learning", "Data & analytics", "Backend systems", "DSA & problem solving"];
+  const testimonials = [["RS", "Rahul S.", "NIT Trichy", "The programme gave me a structure I could actually sustain. By week five, I had three projects and an internship offer."], ["PM", "Priya M.", "BITS Pilani", "The daily public progress kept me accountable. It made interview conversations much easier because I had real work to discuss."]];
 
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance < 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-
-      setTimeLeft({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    };
-
-    const timer = setInterval(updateTimer, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const marqueeItems = [
-    "🔥 Rahul just completed Day 23",
-    "💪 Priya submitted her GitHub",
-    "🚀 Arjun got an internship offer",
-    "⭐ Sneha maintained 30-day streak",
-    "🎯 Vikram from VIT cracked Google",
-    "🏆 Ankit hit Day 60",
-    "💻 Deepika deployed her first app",
-    "🌟 Rohan got shortlisted at Flipkart",
-    "🔥 Meera completed AI/ML track",
-    "🚀 Karan built 3 projects this week"
-  ];
-
-  return (
-    <div className="bg-black min-h-screen text-white font-sans selection:bg-[#f97316] selection:text-white flex justify-center">
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
-        }
-        @keyframes fadeInSlide {
-          0% { opacity: 0; transform: translateY(10px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-slide {
-          animation: fadeInSlide 0.5s ease-out forwards;
-        }
-      `}} />
-
-      <div className="w-full max-w-[390px] bg-[#0a0a0a] min-h-screen relative overflow-hidden shadow-2xl shadow-[#f97316]/5 sm:border-x sm:border-white/5">
-        
-        {/* SECTION 1 - TOP BANNER */}
-        <div className="w-full bg-[#f97316] py-2 px-4 text-center z-50 relative">
-          <p className="text-white text-xs font-medium tracking-wide">
-            🌙 Late night grind? You&apos;re exactly who we&apos;re looking for.
-          </p>
-        </div>
-
-        {/* SECTION 2 - STICKY NAVBAR */}
-        <nav className="sticky top-0 w-full z-40 bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10 px-5 py-3 flex justify-between items-center">
-          <div className="text-[#f97316] font-bold text-xl tracking-tighter">ABTalks</div>
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-gray-300 text-sm font-semibold hover:text-white transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/dashboard" className="bg-[#f97316] text-white text-sm font-semibold px-4 py-1.5 rounded-full hover:bg-[#ea580c] transition-colors">
-              Join Now
-            </Link>
-          </div>
-        </nav>
-
-        {/* SECTION 3 - SCROLLING TICKER */}
-        <div className="w-full bg-black border-b border-white/5 py-2.5 overflow-hidden flex relative">
-          <div className="flex whitespace-nowrap animate-marquee w-max">
-            {marqueeItems.map((item, i) => (
-              <span key={i} className="text-gray-400 text-xs mx-4 font-medium">{item} •</span>
-            ))}
-            {/* Duplicate list for seamless looping */}
-            {marqueeItems.map((item, i) => (
-              <span key={`dup-${i}`} className="text-gray-400 text-xs mx-4 font-medium">{item} •</span>
-            ))}
-          </div>
-        </div>
-
-        {/* SECTION 4 - HERO */}
-        <section className="px-5 pt-16 pb-10 flex flex-col relative text-center">
-          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#f97316]/20 rounded-full blur-[100px] pointer-events-none"></div>
-
-          <h1 className="text-5xl md:text-6xl font-extrabold leading-[1.1] relative z-10 mb-4"
-              style={{
-                background: 'linear-gradient(to bottom, #ffffff, #f97316)',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
-                textShadow: '0 0 60px rgba(249,115,22,0.5)'
-              }}>
-            Build your coding habit.<br />Get discovered.
-          </h1>
-
-          <div className="h-8 md:h-10 mb-6 relative z-10">
-            <span key={roleIndex} className="text-xl md:text-2xl font-bold text-orange-500 block animate-fade-slide">
-              {roles[roleIndex]}
-            </span>
-          </div>
-
-          <p className="text-gray-300 text-sm md:text-base max-w-md mx-auto leading-relaxed relative z-10">
-            Join 500+ top students in a 60-day challenge. Build daily, submit proof, get hired.
-          </p>
-
-          <div className="flex justify-center items-center gap-3 mt-8 relative z-10">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0a0a] bg-gray-800 overflow-hidden">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 15}`} alt="Student avatar" className="w-full h-full object-cover" />
-                </div>
-              ))}
-            </div>
-            <span className="text-xs text-gray-300 font-medium">
-              <strong className="text-white">500+</strong> students already building
-            </span>
-          </div>
-
-          <Link href="/dashboard" className="mt-10 w-full block bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:scale-[1.02] transition-all relative z-10">
-            Start Your 60-Day Journey →
-          </Link>
-
-          <div className="mt-10 bg-black/50 border border-white/10 rounded-2xl p-5 relative z-10">
-            <p className="text-center text-[#f97316] text-xs font-bold tracking-widest mb-3">NEXT COHORT BEGINS IN</p>
-            <div className="flex justify-between gap-2 flex-nowrap">
-              {[
-                { label: 'DAYS', value: timeLeft.days },
-                { label: 'HOURS', value: timeLeft.hours },
-                { label: 'MINS', value: timeLeft.minutes },
-                { label: 'SECS', value: timeLeft.seconds },
-              ].map((item, idx) => (
-                <div key={idx} className="flex flex-col items-center flex-1 bg-[#0a0a0a] border border-[#f97316]/30 shadow-[0_0_10px_rgba(249,115,22,0.1)] rounded-lg py-2">
-                  <span className="text-[#f97316] font-mono text-2xl font-bold">
-                    {item.value.toString().padStart(2, '0')}
-                  </span>
-                  <span className="text-[10px] text-gray-500 font-medium mt-1">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* SECTION 5 - STATS ROW */}
-        <section className="px-5 py-8 border-y border-white/5 bg-black/30">
-          <div className="flex justify-between items-center text-center">
-            <CountUpStat end={500} suffix="+" label="Students Enrolled" />
-            <div className="w-px h-10 bg-white/10"></div>
-            <CountUpStat end={60} label="Days of Building" />
-            <div className="w-px h-10 bg-white/10"></div>
-            <CountUpStat end={50} prefix="Top " label="Companies Hiring" />
-          </div>
-        </section>
-
-        {/* SECTION 6 - PROOF OF WORK PIPELINE */}
-        <section className="px-5 py-12">
-          <h2 className="text-2xl font-bold text-white text-center">How Proof of Work <br/><span className="text-[#f97316]">Gets You Hired</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
-          
-          <div className="relative pl-6 space-y-8">
-            <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-[#f97316] via-[#f97316]/50 to-transparent"></div>
-            
-            {[
-              { num: 1, icon: "🏗️", title: "Build Daily", desc: "Complete your daily coding challenge" },
-              { num: 2, icon: "💻", title: "Push to GitHub", desc: "Every commit is public proof" },
-              { num: 3, icon: "📢", title: "Post on LinkedIn", desc: "Build your personal brand daily" },
-              { num: 4, icon: "🎯", title: "Get Discovered", desc: "Recruiters find YOU, not the other way" },
-            ].map((step, idx) => (
-              <div key={idx} className="relative pl-6">
-                <div className="absolute left-[-25px] top-0 w-8 h-8 rounded-full bg-[#0a0a0a] border-2 border-[#f97316] flex items-center justify-center text-[#f97316] font-bold text-sm shadow-[0_0_10px_rgba(249,115,22,0.4)]">
-                  {step.num}
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-[#f97316]/50 transition-colors">
-                  <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
-                    <span>{step.icon}</span> {step.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm">{step.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SECTION 7 - JOURNEY TIMELINE */}
-        <section className="px-5 py-12 bg-black/40">
-          <h2 className="text-2xl font-bold text-white text-center">Your 60-Day <span className="text-[#f97316]">Transformation</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
-          
-          <div className="relative pl-8 space-y-6">
-            <div className="absolute left-4 top-8 bottom-8 w-px bg-white/20 border-l border-dashed border-[#f97316]/50"></div>
-            
-            {[
-              { day: "Day 1", text: "You write your first commit. Scary but exciting." },
-              { day: "Day 15", text: "You've built 3 projects. Your GitHub is turning green." },
-              { day: "Day 30", text: "Halfway there. Recruiters start noticing your streak." },
-              { day: "Day 60", text: "You did it. 60 projects. 60 LinkedIn posts. Job offers incoming." },
-            ].map((item, idx) => (
-              <div key={idx} className="relative">
-                <div className="absolute left-[-20px] top-6 w-2 h-2 rounded-full bg-[#f97316] shadow-[0_0_8px_rgba(249,115,22,0.8)]"></div>
-                <div className="bg-white/5 border border-white/5 p-6 rounded-xl hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] transition-all">
-                  <div className="mb-3">
-                    <span className="inline-block bg-[#f97316]/20 text-[#f97316] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">{item.day}</span>
-                  </div>
-                  <p className="text-gray-300 text-sm leading-relaxed">{item.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SECTION 8 - TRACKS */}
-        <section className="px-5 py-12">
-          <h2 className="text-2xl font-bold text-white text-center">Choose Your <span className="text-[#f97316]">Track</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
-          
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { icon: "🌐", title: "Web Development", desc: "Next.js, React, Node.js, full-stack projects" },
-              { icon: "📱", title: "App Development", desc: "React Native, Flutter, mobile-first projects" },
-              { icon: "🤖", title: "AI/ML", desc: "Python, TensorFlow, build intelligent models" },
-              { icon: "📊", title: "Data Science", desc: "SQL, Pandas, real-world data analysis" },
-              { icon: "⚙️", title: "Backend", desc: "APIs, databases, system design" },
-              { icon: "🏆", title: "CP / DSA", desc: "DSA, algorithms, problem solving" },
-            ].map((track, idx) => (
-              <div key={idx} className="bg-[#111] border border-white/5 rounded-xl p-4 transition-all duration-300 group cursor-pointer hover:border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:scale-105">
-                <div className="text-2xl mb-2 grayscale group-hover:grayscale-0 transition-all">{track.icon}</div>
-                <h3 className="text-white font-bold text-[11px] mb-1.5 leading-tight">{track.title}</h3>
-                <p className="text-gray-500 text-[9px] leading-snug">{track.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SECTION 9 - WHY JOIN */}
-        <section className="px-5 py-12 bg-black/40">
-          <h2 className="text-2xl font-bold text-white text-center">What You&apos;ll Gain <br/>in <span className="text-[#f97316]">60 Days</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
-          
-          <div className="space-y-4">
-            {[
-              { icon: "🚀", title: "A Green GitHub", desc: "60 consecutive days of commits. Recruiters check this first." },
-              { icon: "📱", title: "A LinkedIn Brand", desc: "60 posts showing your growth. Your profile becomes a magnet." },
-              { icon: "💼", title: "Job-Ready Portfolio", desc: "Real projects, real proof, real opportunities." },
-            ].map((benefit, idx) => (
-              <div key={idx} className="flex gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
-                <div className="w-12 h-12 rounded-lg bg-[#f97316]/10 flex items-center justify-center text-xl shrink-0 border border-[#f97316]/20">
-                  {benefit.icon}
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-sm mb-1">{benefit.title}</h3>
-                  <p className="text-gray-400 text-xs leading-relaxed">{benefit.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SECTION 10 - TESTIMONIALS */}
-        <section className="px-5 py-12">
-          <h2 className="text-2xl font-bold text-white text-center">Students Who <span className="text-[#f97316]">Made It</span></h2>
-          <div className="w-16 h-1 bg-orange-500 rounded-full mx-auto mt-3 mb-8" />
-          
-          <div className="space-y-5">
-            {[
-              { 
-                seed: "rahul", 
-                name: "Rahul S.", 
-                badge: "WEB DEV", 
-                college: "3rd year, NIT Trichy",
-                quote: "The 60-day streak forced me to be consistent. I built 3 solid projects and got an internship at Razorpay in week 5. Best decision of my college life."
-              },
-              { 
-                seed: "priya", 
-                name: "Priya M.", 
-                badge: "AI/ML", 
-                college: "2nd year, BITS Pilani",
-                quote: "Being part of a community of 500+ driven students kept me motivated on days I wanted to quit. Cracked my Groww interview after Day 45."
-              }
-            ].map((testimonial, idx) => (
-              <div key={idx} className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-[#f97316]/5 rounded-bl-full pointer-events-none"></div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full border border-white/10 bg-gray-800 overflow-hidden shrink-0">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${testimonial.seed}`} alt={testimonial.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-white font-bold text-sm leading-tight">{testimonial.name}</h4>
-                    <p className="text-gray-500 text-[10px]">{testimonial.college}</p>
-                  </div>
-                  <div>
-                    <span className="bg-[#f97316]/10 text-[#f97316] text-[8px] font-bold px-2 py-1 rounded border border-[#f97316]/20 whitespace-nowrap">
-                      {testimonial.badge}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-gray-300 text-sm italic leading-relaxed">&ldquo;{testimonial.quote}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* SECTION 11 - FINAL CTA */}
-        <section className="px-5 py-16 text-center relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at center, rgba(249,115,22,0.15) 0%, transparent 70%)' }}>
-          <div className="absolute inset-0 bg-[#f97316]/10 blur-[100px] pointer-events-none rounded-full scale-150"></div>
-          <h2 className="text-3xl font-extrabold text-white mb-3 relative z-10">Ready to start building?</h2>
-          <p className="text-gray-400 text-sm mb-8 relative z-10 px-4">
-            Join 500+ students. 60 days. Real commits. Real opportunities.
-          </p>
-          <Link href="/dashboard" className="w-full bg-[#f97316] text-white font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:shadow-[0_0_30px_rgba(249,115,22,0.7)] hover:bg-[#ea580c] transition-all relative z-10 block text-center">
-            Start Your 60-Day Journey →
-          </Link>
-          <p className="text-gray-500 text-xs mt-4 relative z-10">Free to join. No credit card. Just commitment.</p>
-        </section>
-
-        {/* SECTION 12 - FOOTER */}
-        <footer className="px-5 py-8 border-t border-white/5 bg-[#050505] text-center">
-          <div className="text-[#f97316] font-bold text-xl tracking-tighter mb-2">ABTalks</div>
-          <p className="text-gray-500 text-xs mb-6">Elevating Indian Engineers. One commit at a time.</p>
-          <p className="text-gray-600 text-[10px]">© 2026 ABTalks. All rights reserved.</p>
-        </footer>
-
-      </div>
-    </div>
-  );
+  return <main className="min-h-screen overflow-hidden bg-[#090b12] text-white selection:bg-orange-400 selection:text-[#090b12]">
+    <style dangerouslySetInnerHTML={{ __html: `@keyframes float {0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}} @keyframes rise {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}} .role-rise{animation:rise .35s ease-out both}.orb-float{animation:float 7s ease-in-out infinite}` }} />
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-[620px] bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.16),transparent_62%)]" />
+    <div className="pointer-events-none absolute right-[-150px] top-[380px] h-80 w-80 rounded-full bg-orange-500/10 blur-[110px] orb-float" />
+    <nav className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5 lg:px-8"><Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-lg bg-orange-500 text-sm font-black text-[#090b12]">A</span><span>ABTalks</span></Link><div className="hidden items-center gap-7 text-sm text-slate-400 md:flex"><a href="#how-it-works" className="transition-colors hover:text-white">How it works</a><a href="#tracks" className="transition-colors hover:text-white">Tracks</a><a href="#outcomes" className="transition-colors hover:text-white">Outcomes</a></div><Link href="/sign-in" className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium transition hover:border-white/20 hover:bg-white/10">Sign in</Link></nav>
+    <section className="relative mx-auto grid max-w-6xl gap-14 px-6 pb-20 pt-16 lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:px-8 lg:pb-28 lg:pt-24"><div><div className="mb-7 inline-flex items-center gap-2 rounded-full border border-orange-400/20 bg-orange-400/10 px-3 py-1.5 text-xs font-medium text-orange-200"><span className="h-1.5 w-1.5 rounded-full bg-orange-400" /> Applications for the next cohort are open</div><h1 className="max-w-3xl text-5xl font-semibold leading-[1.03] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">Build work that gets you <span className="text-orange-400">noticed.</span></h1><p className="mt-7 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">A 60-day, portfolio-first challenge for ambitious engineering students. Build consistently, publish your progress, and create proof that opens doors.</p><p className="mt-4 text-sm text-slate-500">Made for future <span key={roleIndex} className="role-rise inline-block font-medium text-orange-300">{roles[roleIndex]}.</span></p><div className="mt-9 flex flex-col gap-3 sm:flex-row"><Link href="/dashboard" className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-5 py-3.5 text-sm font-semibold text-[#160b03] shadow-[0_12px_35px_rgba(249,115,22,.25)] transition hover:bg-orange-400">Join the next cohort <ArrowIcon /></Link><a href="#how-it-works" className="inline-flex items-center justify-center rounded-lg border border-white/10 px-5 py-3.5 text-sm font-medium text-slate-200 transition hover:bg-white/5">See how it works</a></div><div className="mt-10 flex items-center gap-4 text-sm text-slate-400"><div className="flex -space-x-2">{["AS", "NK", "PM", "RV"].map((initials, index) => <span key={initials} className={`grid h-8 w-8 place-items-center rounded-full border-2 border-[#090b12] text-[9px] font-bold ${index % 2 ? "bg-slate-700" : "bg-orange-500/80"}`}>{initials}</span>)}</div><span><strong className="font-semibold text-white">500+</strong> students building in public</span></div></div>
+      <div className="relative mx-auto w-full max-w-[440px] rounded-2xl border border-white/10 bg-[#111520]/80 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:p-5"><div className="flex items-center justify-between border-b border-white/10 pb-4"><div><p className="text-sm font-semibold">Your 60-day sprint</p><p className="mt-1 text-xs text-slate-500">A small daily practice. A visible body of work.</p></div><span className="rounded-md bg-orange-400/10 px-2.5 py-1 text-xs font-medium text-orange-300">Day 23</span></div><div className="mt-5 rounded-xl border border-white/10 bg-[#0c0f17] p-4"><div className="flex items-center justify-between text-xs"><span className="text-slate-400">Challenge progress</span><span className="font-medium text-orange-300">38%</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-[38%] rounded-full bg-gradient-to-r from-orange-600 to-orange-300" /></div><div className="mt-5 flex gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-orange-400/10 text-sm font-bold text-orange-300">23</span><div><p className="text-sm font-medium">Build a REST API with Express</p><p className="mt-1 text-xs leading-5 text-slate-500">Ship a production-minded CRUD API and document your decisions.</p></div></div></div><div className="mt-4 grid grid-cols-3 gap-3">{[["23", "day streak"], ["06", "projects"], ["12%", "top cohort"]].map(([number, label]) => <div key={label} className="rounded-xl border border-white/10 bg-white/[0.025] px-3 py-3"><p className="text-lg font-semibold tracking-tight text-white">{number}</p><p className="mt-0.5 text-[10px] text-slate-500">{label}</p></div>)}</div><div className="mt-5 flex items-center gap-3 rounded-xl border border-orange-400/15 bg-orange-400/[0.06] p-3"><span className="h-2 w-2 rounded-full bg-orange-400" /><p className="text-xs text-orange-100/80">Today&apos;s work is ready when you are.</p></div></div></section>
+    <section className="relative border-y border-white/[0.07] bg-white/[0.025]"><div className="mx-auto grid max-w-6xl grid-cols-2 gap-y-8 px-6 py-9 sm:grid-cols-4 lg:px-8"><CountUpStat value={500} suffix="+" label="students enrolled" /><CountUpStat value={60} label="days of building" /><CountUpStat value={42} suffix="%" label="report more confidence" /><CountUpStat value={6} label="focused career tracks" /></div></section>
+    <section id="how-it-works" className="relative mx-auto max-w-6xl px-6 py-24 lg:px-8"><div className="max-w-xl"><p className="text-xs font-semibold uppercase tracking-[.18em] text-orange-300">The approach</p><h2 className="mt-4 text-3xl font-semibold tracking-[-.04em] sm:text-4xl">Less noise. More evidence of what you can do.</h2><p className="mt-4 leading-7 text-slate-400">The programme turns consistent effort into a portfolio that is easy for people to understand and hard to overlook.</p></div><div className="mt-14 grid gap-4 md:grid-cols-3">{steps.map(([number, title, description]) => <article key={number} className="group rounded-xl border border-white/10 bg-[#0d1019] p-6 transition hover:-translate-y-1 hover:border-orange-400/30"><p className="text-sm font-medium text-orange-300">{number}</p><h3 className="mt-12 text-lg font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-slate-400">{description}</p><span className="mt-7 block h-px w-full bg-gradient-to-r from-orange-400/70 to-transparent" /></article>)}</div></section>
+    <section id="tracks" className="border-y border-white/[0.07] bg-[#0c0f17]"><div className="mx-auto grid max-w-6xl gap-10 px-6 py-24 lg:grid-cols-[.7fr_1.3fr] lg:px-8"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-orange-300">Choose a direction</p><h2 className="mt-4 text-3xl font-semibold tracking-[-.04em] sm:text-4xl">One challenge. Six paths.</h2><p className="mt-4 text-sm leading-6 text-slate-400">Start with the area you want to grow in. The system is built around focused practice, not generic content.</p></div><div className="grid gap-3 sm:grid-cols-2">{tracks.map((track, index) => <div key={track} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.025] px-4 py-4 transition hover:border-orange-400/35 hover:bg-orange-400/[0.04]"><span className="text-sm font-medium text-slate-200">{track}</span><span className="text-xs text-slate-600">0{index + 1}</span></div>)}</div></div></section>
+    <section id="outcomes" className="mx-auto max-w-6xl px-6 py-24 lg:px-8"><div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-orange-300">Student outcomes</p><h2 className="mt-4 text-3xl font-semibold tracking-[-.04em] sm:text-4xl">Progress that speaks for itself.</h2></div><p className="max-w-sm text-sm leading-6 text-slate-400">Stories from students who made consistency part of their career advantage.</p></div><div className="mt-12 grid gap-4 md:grid-cols-2">{testimonials.map(([initials, name, college, quote]) => <figure key={name} className="rounded-xl border border-white/10 bg-white/[0.025] p-6"><blockquote className="text-base leading-7 text-slate-200">&ldquo;{quote}&rdquo;</blockquote><figcaption className="mt-8 flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-orange-400/10 text-[10px] font-bold text-orange-300">{initials}</span><span><span className="block text-sm font-medium text-white">{name}</span><span className="block text-xs text-slate-500">{college}</span></span></figcaption></figure>)}</div></section>
+    <section className="mx-6 mb-12 rounded-2xl border border-orange-400/20 bg-[radial-gradient(ellipse_at_top_right,rgba(249,115,22,.2),transparent_55%),#10131d] lg:mx-auto lg:max-w-6xl"><div className="grid gap-8 px-6 py-10 sm:px-10 lg:grid-cols-[1fr_auto] lg:items-center"><div><p className="text-sm font-medium text-orange-200">Next cohort starts soon</p><h2 className="mt-2 text-3xl font-semibold tracking-[-.04em]">Your next commit can change the trajectory.</h2></div><div className="flex gap-2">{Object.entries(timeLeft).map(([label, value]) => <div key={label} className="min-w-14 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-center"><p className="font-mono text-xl font-semibold text-white">{String(value).padStart(2, "0")}</p><p className="mt-1 text-[9px] font-medium uppercase tracking-wider text-slate-500">{label}</p></div>)}</div><Link href="/dashboard" className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-5 py-3.5 text-sm font-semibold text-[#160b03] transition hover:bg-orange-400 lg:col-span-2">Reserve your place <ArrowIcon /></Link></div></section>
+    <footer className="border-t border-white/[0.07] py-8"><div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between lg:px-8"><span className="font-medium text-slate-300">ABTalks</span><span>Built for engineers who want their work to be seen.</span><span>© 2026 ABTalks</span></div></footer>
+  </main>;
 }
