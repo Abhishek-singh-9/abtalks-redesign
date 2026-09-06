@@ -2,6 +2,8 @@ import student from '@/data/student.json';
 import tasks from '@/data/tasks.json';
 import Link from 'next/link';
 
+type Achievement = (typeof student.achievements)[number];
+
 export default function DashboardPage() {
   const { today } = tasks;
   
@@ -36,7 +38,7 @@ export default function DashboardPage() {
             <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 p-3.5 rounded-2xl text-sm font-medium flex items-start gap-3 shadow-lg shadow-amber-500/5">
               <span className="text-amber-500 text-lg leading-none">⚠️</span>
               <p className="leading-tight pt-0.5">
-                You missed {student.missedDays} {student.missedDays === 1 ? 'day' : 'days'} — don't break your streak!
+                You missed {student.missedDays} {student.missedDays === 1 ? 'day' : 'days'} — don&apos;t break your streak!
               </p>
             </div>
           )}
@@ -45,7 +47,7 @@ export default function DashboardPage() {
             <div className="bg-blue-500/10 border border-blue-500/20 text-blue-400 p-3.5 rounded-2xl text-sm font-medium flex items-start gap-3 shadow-lg shadow-blue-500/5">
               <span className="text-blue-400 text-lg leading-none">👋</span>
               <p className="leading-tight pt-0.5">
-                Complete today's task to start your streak!
+                Complete today&apos;s task to start your streak!
               </p>
             </div>
           )}
@@ -110,7 +112,7 @@ export default function DashboardPage() {
           {/* Today's Task */}
           <div>
             <div className="flex items-center justify-between mb-4 mt-8">
-              <h2 className="text-lg font-bold text-zinc-100 tracking-tight">Today's Task</h2>
+              <h2 className="text-lg font-bold text-zinc-100 tracking-tight">Today&apos;s Task</h2>
               <span className="bg-zinc-800 text-zinc-300 text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest">
                 Day {today.day}
               </span>
@@ -167,7 +169,7 @@ export default function DashboardPage() {
           <div className="mt-8 pb-4">
             <h2 className="text-lg font-bold text-zinc-100 tracking-tight mb-4">Achievements</h2>
             <div className="grid grid-cols-2 gap-3">
-              {student.achievements.map((achievement: any) => (
+              {student.achievements.map((achievement: Achievement) => (
                 <div 
                   key={achievement.id}
                   className={`p-4 rounded-3xl border flex flex-col items-center text-center gap-3 transition-all ${
